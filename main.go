@@ -21,15 +21,15 @@ var (
 )
 
 type Wallet struct {
-	Id      string
+	Id string
 }
 
 type Transaction struct {
-	Id string
-	Sender Wallet
-	Recipient Wallet
-	Sum float32
-	Status bool
+	Id       string
+	Sender   Wallet
+	Recivier Wallet
+	Sum      string
+	Status   bool
 }
 
 func (w *Wallet) GetBalance(db *sql.DB) {
@@ -55,14 +55,25 @@ func (w *Wallet) GetBalance(db *sql.DB) {
 
 func (t *Transaction) SendMoney(*sql.DB) {
 
-	output, err := db.Query("UPDATE wallets set balance = (SELECT balance FROM wallets WHERE id = '"
-	+t.Sender.Id"') - "+t.Sum" WHERE id = '" + t.Sender.Id + "';")
+	_, err := db.Exec("UPDATE wallets set balance = (SELECT balance FROM wallets WHERE id = '" +
+		t.Sender.Id + "') - " + t.Sum + " WHERE id = '" + t.Sender.Id + "';")
+
 	if err != nil {
-		fmt.Println("Select query failure:")
+		fmt.Println("Debit query fail:")
 		log.Fatal(err)
 	} else {
-		fmt.Println("Select query correct:")
+		fmt.Println("Debit query successful:")
 	}
+
+	_, err = db.Exec("UPDATE wallets set balance = (SELECT balance FROM wallets WHERE id = '" +
+		t.Recivier.Id + "') + " + t.Sum + " WHERE id = '" + t.Recivier.Id + "';")
+	if err != nil {
+		fmt.Println("Recieving funds fail:")
+		log.Fatal(err)
+	} else {
+		fmt.Println("Recieving funds successful:")
+	}
+
 }
 
 func DatabaseConnect(connectionString string) *sql.DB {
@@ -85,12 +96,20 @@ func DatabaseConnect(connectionString string) *sql.DB {
 func main() {
 
 	connectionString := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable",2
+		"password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
 
 	db = DatabaseConnect(connectionString)
 
 	var test_wallet Wallet
 	test_wallet.Id = "1"
+	test_wallet.GetBalance(db)
+
+	var test_transaction Transaction
+	test_transaction.Sum = "-20"
+	test_transaction.Sender.Id = "1"
+	test_transaction.Recivier.Id = "2"
+
+	test_transaction.SendMoney(db)
 	test_wallet.GetBalance(db)
 }
