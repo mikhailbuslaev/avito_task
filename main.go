@@ -53,7 +53,7 @@ func (w *Wallet) GetBalance(db *sql.DB) {
 	}
 }
 
-func (t *Transaction) SendMoney(*sql.DB) {
+func (t *Transaction) MakeTransaction(*sql.DB) {
 
 	_, err := db.Exec("UPDATE wallets set balance = (SELECT balance FROM wallets WHERE id = '" +
 		t.Sender.Id + "') - " + t.Sum + " WHERE id = '" + t.Sender.Id + "';")
@@ -62,7 +62,7 @@ func (t *Transaction) SendMoney(*sql.DB) {
 		fmt.Println("Debit query fail:")
 		log.Fatal(err)
 	} else {
-		fmt.Println("Debit query successful:")
+		fmt.Println("Debit query successful")
 	}
 
 	_, err = db.Exec("UPDATE wallets set balance = (SELECT balance FROM wallets WHERE id = '" +
@@ -71,7 +71,7 @@ func (t *Transaction) SendMoney(*sql.DB) {
 		fmt.Println("Recieving funds fail:")
 		log.Fatal(err)
 	} else {
-		fmt.Println("Recieving funds successful:")
+		fmt.Println("Recieving funds is successful")
 	}
 
 }
@@ -85,10 +85,10 @@ func DatabaseConnect(connectionString string) *sql.DB {
 
 	err = db.Ping()
 	if err != nil {
-		fmt.Println("Connection failure:")
+		fmt.Println("Database connection fail:")
 		log.Fatal(err)
 	} else {
-		fmt.Println("Connection is correct")
+		fmt.Println("Database connection is successful")
 	}
 	return db
 }
@@ -101,15 +101,16 @@ func main() {
 
 	db = DatabaseConnect(connectionString)
 
-	var test_wallet Wallet
-	test_wallet.Id = "1"
-	test_wallet.GetBalance(db)
+	// var test_wallet Wallet
+	// test_wallet.Id = "1"
+	// test_wallet.GetBalance(db)
 
-	var test_transaction Transaction
-	test_transaction.Sum = "-20"
-	test_transaction.Sender.Id = "1"
-	test_transaction.Recivier.Id = "2"
+	// var test_transaction Transaction
+	// test_transaction.Sum = "-20"
+	// test_transaction.Sender.Id = "1"
+	// test_transaction.Recivier.Id = "2"
 
-	test_transaction.SendMoney(db)
-	test_wallet.GetBalance(db)
+	// test_transaction.MakeTransaction(db)
+	// test_wallet.GetBalance(db)
+
 }
