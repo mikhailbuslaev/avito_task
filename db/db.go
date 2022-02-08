@@ -8,27 +8,12 @@ import (
 	_ "github.com/lib/pq"
 )
 
-const (
-	host     = "localhost"
-	port     = 8888
-	user     = "postgres"
-	password = "postgres"
-	dbname   = "test"
-)
-
 var (
 	db *sql.DB
 )
 
 type Wallet struct {
 	Id string
-}
-
-type Transaction struct {
-
-	SenderId	string
-	RecieverId 	string
-	Sum			string
 }
 
 func (w *Wallet) GetBalance(db *sql.DB) {
