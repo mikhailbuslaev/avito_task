@@ -24,6 +24,13 @@ type Wallet struct {
 	Id string
 }
 
+type Transaction struct {
+
+	SenderId	string
+	RecieverId 	string
+	Sum			string
+}
+
 func (w *Wallet) GetBalance(db *sql.DB) {
 
 	output, err := db.Query("SELECT balance FROM wallets where id = '" + w.Id + "';")

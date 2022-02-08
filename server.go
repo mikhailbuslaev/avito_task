@@ -6,15 +6,9 @@ import (
 	"net/http"
 	"time"
 	"encoding/json"
+	"github.com/mikhailbuslaev/avito_task/db"
 	"github.com/gorilla/mux"
 )
-
-type Transaction struct {
-
-	SenderId	string
-	RecieverId 	string
-	Sum			string
-}
 
 func HomeHandler(w http.ResponseWriter, req *http.Request) {
 
@@ -23,7 +17,7 @@ func HomeHandler(w http.ResponseWriter, req *http.Request) {
 
 func TransactionHandler(w http.ResponseWriter, req *http.Request) {
 
-		t := Transaction{}
+		t := db.Transaction{}
 
 		err := req.ParseForm()
 	
