@@ -9,10 +9,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type TransactionTask struct {
+type Transaction struct {
 
 	SenderId	string
 	RecieverId 	string
+	Sum			string
 }
 
 func HomeHandler(w http.ResponseWriter, req *http.Request) {
@@ -22,7 +23,7 @@ func HomeHandler(w http.ResponseWriter, req *http.Request) {
 
 func TransactionHandler(w http.ResponseWriter, req *http.Request) {
 
-		transaction := TransactionTask{}
+		t := Transaction{}
 
 		err := req.ParseForm()
 	
@@ -32,15 +33,22 @@ func TransactionHandler(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 	
-		err = json.NewDecoder(req.Body).Decode(&transaction)
+		err = json.NewDecoder(req.Body).Decode(&t)
 		if err != nil {
 			http.Error(w, err.Error(), 400)
 			return
 		}
-		fmt.Println(transaction.SenderId)
+
+		t.db.MakeTransaction(db)
 }
 
 func main() {
+
+	connectionString := fmt.Sprintf("host=%s port=%d user=%s "+
+	"password=%s dbname=%s sslmode=disable",
+	host, port, user, password, dbname)
+
+	db = db.DatabaseConnect(connectionString)
 
 	router := mux.NewRouter()
 	router.HandleFunc("/", HomeHandler).Methods("GET")
