@@ -8,14 +8,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-var (
-	db *sql.DB
-)
-
-type Wallet struct {
-	Id string
-}
-
 func (w *Wallet) GetBalance(db *sql.DB) {
 
 	output, err := db.Query("SELECT balance FROM wallets where id = '" + w.Id + "';")

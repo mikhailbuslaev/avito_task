@@ -16,7 +16,7 @@ const (
 	user     = "postgres"
 	password = "postgres"
 	dbname   = "test"
-)
+)	
 
 type Transaction struct {
 
@@ -25,16 +25,24 @@ type Transaction struct {
 	Sum			string
 }
 
+var (
+	db *sql.DB
+)
+
+type Wallet struct {
+	Id string
+}
+
 func HomeHandler(w http.ResponseWriter, req *http.Request) {
 
 	fmt.Fprintf(w, "hello\n")
 }
 
 func TransactionHandler(w http.ResponseWriter, req *http.Request) {
-	
+
 	db = db.DatabaseConnect(connectionString)
 
-	t := Transaction{}
+	var t := Transaction{}
 
 	err := req.ParseForm()
 	
