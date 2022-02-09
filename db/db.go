@@ -1,4 +1,4 @@
-package main
+package db
 
 import (
 	"database/sql"
@@ -124,24 +124,4 @@ func DatabaseConnect(connectionString string) *sql.DB {
 		fmt.Println("Database connection is successful")
 	}
 	return db
-}
-
-func main() {
-
-	connectionString := GetConfig()
-	
-	db = DatabaseConnect(connectionString)
-
-	// var test_wallet Wallet
-	// test_wallet.Id = "1"
-	// test_wallet.GetBalance(db)
-
-	// var test_transaction Transaction
-	// test_transaction.Sum = "-20"
-	// test_transaction.Sender.Id = "1"
-	// test_transaction.Recivier.Id = "2"
-
-	// test_transaction.MakeTransaction(db)
-	// test_wallet.GetBalance(db)
-
 }

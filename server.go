@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/mikhailbuslaev/avito_task/greet"
+	"github.com/mikhailbuslaev/avito_task/db"
 )
 
 type TransactionTask struct {
