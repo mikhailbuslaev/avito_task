@@ -7,6 +7,7 @@ import (
 	"time"
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"github.com/mikhailbuslaev/avito_task/greet"
 )
 
 type TransactionTask struct {
@@ -52,7 +53,7 @@ func main() {
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
-
+	greet.Hello()
 	fmt.Println("Server run...")
 
 	log.Fatal(server.ListenAndServe())
