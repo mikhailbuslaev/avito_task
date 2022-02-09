@@ -35,8 +35,7 @@ func TransactionHandler(w http.ResponseWriter, req *http.Request) {
 	
 		err = json.NewDecoder(req.Body).Decode(&transaction)
 		if err != nil {
-			http.Error(w, err.Error(), 400)
-			return
+			log.Fatal(err)
 		}
 		fmt.Println(transaction.SenderId)
 }
