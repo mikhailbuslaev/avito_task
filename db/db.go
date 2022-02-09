@@ -4,17 +4,20 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
+	"encoding/json"
+	"io/ioutil"
 
 	_ "github.com/lib/pq"
 )
 
-const (
-	host     = "localhost"
-	port     = 8888
-	user     = "postgres"
-	password = "postgres"
-	dbname   = "test"
-)
+type Config struct {
+	Host string		 	`json:"host"`
+	Port int			`json:"port"`
+	User string		 	`json:"user"`
+	Password string		`json:"password"`
+	Dbname string 		`json:"dbname"`
+}
 
 var (
 	db *sql.DB
@@ -30,6 +33,30 @@ type Transaction struct {
 	Recivier Wallet
 	Sum      string
 	Status   bool
+}
+
+func GetConfig() Config {
+	file, err := os.Open("dbconfig.json")
+
+	if err != nil {
+		fmt.Println("error:", err)
+	} else {
+		fmt.Println("Successfully opened dbconfig.json")
+	}
+	defer file.Close()
+
+	byteValue, err := ioutil.ReadAll(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var config Config
+	json.Unmarshal(byteValue, &config)
+
+	if err != nil {
+  		fmt.Println("error:", err)
+	}
+	return config
 }
 
 func (w *Wallet) GetBalance(db *sql.DB) {
@@ -95,9 +122,11 @@ func DatabaseConnect(connectionString string) *sql.DB {
 
 func main() {
 
+	var c Config
+	c = GetConfig()
 	connectionString := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
+		c.Host, c.Port, c.User, c.Password, c.Dbname)
 
 	db = DatabaseConnect(connectionString)
 

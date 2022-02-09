@@ -13,6 +13,7 @@ type TransactionTask struct {
 
 	SenderId	string
 	RecieverId 	string
+	Sum			string
 }
 
 func HomeHandler(w http.ResponseWriter, req *http.Request) {
