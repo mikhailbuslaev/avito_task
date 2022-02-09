@@ -1,4 +1,4 @@
-package db
+package main
 
 import (
 	"database/sql"
@@ -7,6 +7,30 @@ import (
 
 	_ "github.com/lib/pq"
 )
+
+const (
+	host     = "localhost"
+	port     = 8888
+	user     = "postgres"
+	password = "postgres"
+	dbname   = "test"
+)
+
+var (
+	db *sql.DB
+)
+
+type Wallet struct {
+	Id string
+}
+
+type Transaction struct {
+	Id       string
+	Sender   Wallet
+	Recivier Wallet
+	Sum      string
+	Status   bool
+}
 
 func (w *Wallet) GetBalance(db *sql.DB) {
 
@@ -32,7 +56,7 @@ func (w *Wallet) GetBalance(db *sql.DB) {
 func (t *Transaction) MakeTransaction(*sql.DB) {
 
 	_, err := db.Exec("UPDATE wallets set balance = (SELECT balance FROM wallets WHERE id = '" +
-		t.SenderId + "') - " + t.Sum + " WHERE id = '" + t.SenderId + "';")
+		t.Sender.Id + "') - " + t.Sum + " WHERE id = '" + t.Sender.Id + "';")
 
 	if err != nil {
 		fmt.Println("Debit query fail:")
@@ -42,7 +66,7 @@ func (t *Transaction) MakeTransaction(*sql.DB) {
 	}
 
 	_, err = db.Exec("UPDATE wallets set balance = (SELECT balance FROM wallets WHERE id = '" +
-		t.RecieverId + "') + " + t.Sum + " WHERE id = '" + t.RecieverId + "';")
+		t.Recivier.Id + "') + " + t.Sum + " WHERE id = '" + t.Recivier.Id + "';")
 	if err != nil {
 		fmt.Println("Recieving funds fail:")
 		log.Fatal(err)
@@ -67,4 +91,26 @@ func DatabaseConnect(connectionString string) *sql.DB {
 		fmt.Println("Database connection is successful")
 	}
 	return db
+}
+
+func main() {
+
+	connectionString := fmt.Sprintf("host=%s port=%d user=%s "+
+		"password=%s dbname=%s sslmode=disable",
+		host, port, user, password, dbname)
+
+	db = DatabaseConnect(connectionString)
+
+	// var test_wallet Wallet
+	// test_wallet.Id = "1"
+	// test_wallet.GetBalance(db)
+
+	// var test_transaction Transaction
+	// test_transaction.Sum = "-20"
+	// test_transaction.Sender.Id = "1"
+	// test_transaction.Recivier.Id = "2"
+
+	// test_transaction.MakeTransaction(db)
+	// test_wallet.GetBalance(db)
+
 }
