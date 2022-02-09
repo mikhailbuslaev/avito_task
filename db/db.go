@@ -35,7 +35,7 @@ type Transaction struct {
 	Status   bool
 }
 
-func GetConfig() Config {
+func GetConfig() string {
 	file, err := os.Open("dbconfig.json")
 
 	if err != nil {
@@ -56,7 +56,13 @@ func GetConfig() Config {
 	if err != nil {
   		fmt.Println("error:", err)
 	}
-	return config
+	
+	connectionString := fmt.Sprintf("host=%s port=%d user=%s "+
+		"password=%s dbname=%s sslmode=disable",
+		config.Host, config.Port, config.User, config.Password,
+		 config.Dbname)
+
+	return connectionString
 }
 
 func (w *Wallet) GetBalance(db *sql.DB) {
@@ -122,12 +128,8 @@ func DatabaseConnect(connectionString string) *sql.DB {
 
 func main() {
 
-	var c Config
-	c = GetConfig()
-	connectionString := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		c.Host, c.Port, c.User, c.Password, c.Dbname)
-
+	connectionString := GetConfig()
+	
 	db = DatabaseConnect(connectionString)
 
 	// var test_wallet Wallet
