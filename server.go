@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -8,19 +9,24 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/mikhailbuslaev/avito_task/db"
+	. "github.com/mikhailbuslaev/avito_task/db"
 	"github.com/mikhailbuslaev/avito_task/greet"
 )
-
-type TransactionTask struct {
-	SenderId   string
-	RecieverId string
-	Sum        string
-}
 
 func HomeHandler(w http.ResponseWriter, req *http.Request) {
 
 	fmt.Fprintf(w, "hello\n")
+}
+
+func (t *TransactionTask) TransactionCheck(db *sql.DB) {
+
+	var wallet *Wallet
+	wallet.Id = t.SenderId
+	balance := wallet.GetBalance(db)
+	if t.Sum > balance {
+		fmt.Println(balance)
+	}
+
 }
 
 func TransactionHandler(w http.ResponseWriter, req *http.Request) {
@@ -55,9 +61,9 @@ func main() {
 		ReadTimeout:  15 * time.Second,
 	}
 	greet.Hello()
-	connstring := db.GetConfig()
+	connstring := GetConfig()
 	fmt.Println(connstring)
-	db.DatabaseConnect(connstring)
+	DatabaseConnect(connstring)
 
 	fmt.Println("Server run...")
 

@@ -19,20 +19,19 @@ type Config struct {
 	Dbname   string `json:"dbname"`
 }
 
+type TransactionTask struct {
+	SenderId   string
+	RecieverId string
+	Sum        float32
+	Status     string
+}
+
 var (
 	db *sql.DB
 )
 
 type Wallet struct {
 	Id string
-}
-
-type Transaction struct {
-	Id       string
-	Sender   Wallet
-	Recivier Wallet
-	Sum      string
-	Status   bool
 }
 
 func GetConfig() string {
@@ -65,7 +64,7 @@ func GetConfig() string {
 	return connectionString
 }
 
-func (w *Wallet) GetBalance(db *sql.DB) {
+func (w *Wallet) GetBalance(db *sql.DB) float32 {
 
 	output, err := db.Query("SELECT balance FROM wallets where id = '" + w.Id + "';")
 	if err != nil {
@@ -75,21 +74,19 @@ func (w *Wallet) GetBalance(db *sql.DB) {
 		fmt.Println("Select query correct:")
 	}
 
-	for output.Next() {
-		var (
-			result string
-		)
-		if err := output.Scan(&result); err != nil {
-			log.Fatal(err)
-		}
-		log.Printf("Your balance is %s \n", result)
+	var result float32
+
+	if err := output.Scan(&result); err != nil {
+		log.Fatal(err)
 	}
+	log.Printf("Your balance is %g \n", result)
+	return result
 }
 
-func (t *Transaction) MakeTransaction(*sql.DB) {
+func (t *TransactionTask) MakeTransaction(*sql.DB) {
 
 	_, err := db.Exec("UPDATE wallets set balance = (SELECT balance FROM wallets WHERE id = '" +
-		t.Sender.Id + "') - " + t.Sum + " WHERE id = '" + t.Sender.Id + "';")
+		t.SenderId + "') - " + t.Sum + " WHERE id = '" + t.SenderId + "';")
 
 	if err != nil {
 		fmt.Println("Debit query fail:")
@@ -99,7 +96,7 @@ func (t *Transaction) MakeTransaction(*sql.DB) {
 	}
 
 	_, err = db.Exec("UPDATE wallets set balance = (SELECT balance FROM wallets WHERE id = '" +
-		t.Recivier.Id + "') + " + t.Sum + " WHERE id = '" + t.Recivier.Id + "';")
+		t.RecieverId + "') + " + t.Sum + " WHERE id = '" + t.RecieverId + "';")
 	if err != nil {
 		fmt.Println("Recieving funds fail:")
 		log.Fatal(err)
