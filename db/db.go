@@ -109,7 +109,7 @@ func (t *Transaction) MakeTransaction(*sql.DB) {
 
 }
 
-func Connect(connectionString string) *sql.DB {
+func DatabaseConnect(connectionString string) *sql.DB {
 
 	db, err := sql.Open("postgres", connectionString)
 	if err != nil {
