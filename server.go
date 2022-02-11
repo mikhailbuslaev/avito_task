@@ -18,13 +18,6 @@ func HomeHandler(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "hello\n")
 }
 
-type TransactionTask struct {
-	SenderId   string
-	RecieverId string
-	Sum        float32
-	Status     string
-}
-
 func (t *TransactionTask) TransactionCheck(db *sql.DB) {
 
 	var wallet *Wallet
