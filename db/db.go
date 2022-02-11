@@ -86,7 +86,7 @@ func (w *Wallet) GetBalance(db *sql.DB) float32 {
 func (t *TransactionTask) MakeTransaction(*sql.DB) {
 
 	_, err := db.Exec("UPDATE wallets set balance = (SELECT balance FROM wallets WHERE id = '" +
-		t.SenderId + "') - " + t.Sum + " WHERE id = '" + t.SenderId + "';")
+		t.SenderId + "') - " + fmt.Sprintf("%f", t.Sum) + " WHERE id = '" + t.SenderId + "';")
 
 	if err != nil {
 		fmt.Println("Debit query fail:")
@@ -96,7 +96,7 @@ func (t *TransactionTask) MakeTransaction(*sql.DB) {
 	}
 
 	_, err = db.Exec("UPDATE wallets set balance = (SELECT balance FROM wallets WHERE id = '" +
-		t.RecieverId + "') + " + t.Sum + " WHERE id = '" + t.RecieverId + "';")
+		t.RecieverId + "') + " + fmt.Sprintf("%f", t.Sum) + " WHERE id = '" + t.RecieverId + "';")
 	if err != nil {
 		fmt.Println("Recieving funds fail:")
 		log.Fatal(err)
