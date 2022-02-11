@@ -2,21 +2,21 @@ package db
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
-	"encoding/json"
-	"io/ioutil"
 
 	_ "github.com/lib/pq"
 )
 
 type Config struct {
-	Host string		 	`json:"host"`
-	Port int			`json:"port"`
-	User string		 	`json:"user"`
-	Password string		`json:"password"`
-	Dbname string 		`json:"dbname"`
+	Host     string `json:"host"`
+	Port     int    `json:"port"`
+	User     string `json:"user"`
+	Password string `json:"password"`
+	Dbname   string `json:"dbname"`
 }
 
 var (
@@ -54,13 +54,13 @@ func GetConfig() string {
 	json.Unmarshal(byteValue, &config)
 
 	if err != nil {
-  		fmt.Println("error:", err)
+		fmt.Println("error:", err)
 	}
-	
+
 	connectionString := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		config.Host, config.Port, config.User, config.Password,
-		 config.Dbname)
+		config.Dbname)
 
 	return connectionString
 }
@@ -109,7 +109,7 @@ func (t *Transaction) MakeTransaction(*sql.DB) {
 
 }
 
-func DatabaseConnect(connectionString string) *sql.DB {
+func Connect(connectionString string) *sql.DB {
 
 	db, err := sql.Open("postgres", connectionString)
 	if err != nil {
