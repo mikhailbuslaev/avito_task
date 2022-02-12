@@ -20,15 +20,11 @@ type Config struct {
 }
 
 type TransactionTask struct {
-	SenderId   string 	`json:"SenderId"`
-	RecieverId string 	`json:"RecieverId"`
-	Sum        float32 	`json:"Sum"`
-	Status     string 	`json:"Status"`
+	SenderId   string  `json:"SenderId"`
+	RecieverId string  `json:"RecieverId"`
+	Sum        float32 `json:"Sum"`
+	Status     string  `json:"Status"`
 }
-
-var (
-	db *sql.DB
-)
 
 type Wallet struct {
 	Id string
@@ -80,7 +76,7 @@ func Connect() *sql.DB {
 
 func (w *Wallet) GetBalance(db *sql.DB) float32 {
 
-	output, err := db.Query("SELECT balance FROM wallets where id = '" + w.Id + "';")
+	rows, err := db.Query("SELECT balance FROM wallets where id = '" + w.Id + "';")
 	if err != nil {
 		fmt.Println("Select query failure:")
 		log.Fatal(err)
@@ -90,32 +86,39 @@ func (w *Wallet) GetBalance(db *sql.DB) float32 {
 
 	var result float32
 
-	if err := output.Scan(&result); err != nil {
-		log.Fatal(err)
+	for rows.Next() {
+
+		err := rows.Scan(&result)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("Your balance is %g \n", result)
 	}
-	log.Printf("Your balance is %g \n", result)
 	return result
 }
 
 func (t *TransactionTask) TransactionCheck(db *sql.DB) {
 
-	var wallet *Wallet
+	wallet := &Wallet{}
 	wallet.Id = t.SenderId
 	balance := wallet.GetBalance(db)
 	if t.Sum > balance {
 		fmt.Println(balance)
 		t.Status = "rejected"
+		fmt.Println("Transaction rejected")
 	} else {
 		t.Status = "approved"
+		fmt.Println("Transaction approved")
 	}
 
 }
 
-func (t *TransactionTask) MakeTransaction(*sql.DB) {
+func (t *TransactionTask) MakeTransaction(db *sql.DB) {
 
-	stringSum := fmt.Sprintf("%f", t.Sum)
+	stringSum := fmt.Sprintf("%g", t.Sum)
 	_, err := db.Exec("UPDATE wallets set balance = (SELECT balance FROM wallets WHERE id = '" +
-		t.SenderId + "') - " + stringSum + " WHERE id = '" + t.SenderId + "';")
+		t.SenderId + "') - '" + stringSum + "' WHERE id = '" + t.SenderId + "';")
 
 	if err != nil {
 		fmt.Println("Debit query fail:")
@@ -125,7 +128,7 @@ func (t *TransactionTask) MakeTransaction(*sql.DB) {
 	}
 
 	_, err = db.Exec("UPDATE wallets set balance = (SELECT balance FROM wallets WHERE id = '" +
-		t.RecieverId + "') + " + stringSum + " WHERE id = '" + t.RecieverId + "';")
+		t.RecieverId + "') + '" + stringSum + "' WHERE id = '" + t.RecieverId + "';")
 	if err != nil {
 		fmt.Println("Recieving funds fail:")
 		log.Fatal(err)

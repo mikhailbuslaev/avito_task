@@ -1,13 +1,12 @@
 package main
 
 import (
+	"avitotask/db"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
-
-	"avitotask/db"
 
 	"github.com/gorilla/mux"
 )
@@ -21,12 +20,16 @@ func TransactionHandler(w http.ResponseWriter, req *http.Request) {
 
 	database := db.Connect()
 	t := db.TransactionTask{}
-	t = ReadHttpRequest(w , req)
+	t = ReadHttpRequest(w, req)
 
 	t.TransactionCheck(database)
+
+	if t.Status == "approved" {
+		t.MakeTransaction(database)
+	}
 }
 
-func ReadHttpRequest(w http.ResponseWriter, req *http.Request) db.TransactionTask{
+func ReadHttpRequest(w http.ResponseWriter, req *http.Request) db.TransactionTask {
 
 	t := db.TransactionTask{}
 	err := req.ParseForm()
