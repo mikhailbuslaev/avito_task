@@ -20,10 +20,10 @@ type Config struct {
 }
 
 type TransactionTask struct {
-	SenderId   string
-	RecieverId string
-	Sum        float32
-	Status     string
+	SenderId   string 	`json:"SenderId"`
+	RecieverId string 	`json:"RecieverId"`
+	Sum        float32 	`json:"Sum"`
+	Status     string 	`json:"Status"`
 }
 
 var (
@@ -34,7 +34,7 @@ type Wallet struct {
 	Id string
 }
 
-func GetConfig() string {
+func Connect() *sql.DB {
 	file, err := os.Open("dbconfig.json")
 
 	if err != nil {
@@ -61,7 +61,21 @@ func GetConfig() string {
 		config.Host, config.Port, config.User, config.Password,
 		config.Dbname)
 
-	return connectionString
+	db, err := sql.Open("postgres", connectionString)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = db.Ping()
+	if err != nil {
+		fmt.Println("Database connection fail:")
+		log.Fatal(err)
+	} else {
+		fmt.Println("Database connection is successful")
+	}
+
+	return db
+
 }
 
 func (w *Wallet) GetBalance(db *sql.DB) float32 {
@@ -90,6 +104,9 @@ func (t *TransactionTask) TransactionCheck(db *sql.DB) {
 	balance := wallet.GetBalance(db)
 	if t.Sum > balance {
 		fmt.Println(balance)
+		t.Status = "rejected"
+	} else {
+		t.Status = "approved"
 	}
 
 }
@@ -116,21 +133,4 @@ func (t *TransactionTask) MakeTransaction(*sql.DB) {
 		fmt.Println("Recieving funds is successful")
 	}
 
-}
-
-func DatabaseConnect(connectionString string) *sql.DB {
-
-	db, err := sql.Open("postgres", connectionString)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = db.Ping()
-	if err != nil {
-		fmt.Println("Database connection fail:")
-		log.Fatal(err)
-	} else {
-		fmt.Println("Database connection is successful")
-	}
-	return db
 }
