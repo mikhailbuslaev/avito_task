@@ -24,6 +24,7 @@ type TransactionTask struct {
 	RecieverId string  `json:"RecieverId"`
 	Sum        float32 `json:"Sum"`
 	Status     string  `json:"Status"`
+	Key        string  `json:"Key"`
 }
 
 type Wallet struct {
@@ -101,16 +102,27 @@ func (w *Wallet) GetBalance(db *sql.DB) float32 {
 
 func (t *TransactionTask) TransactionCheck(db *sql.DB) {
 
+	t.Status = "uncompleted"
+
 	wallet := &Wallet{}
 	wallet.Id = t.SenderId
-	balance := wallet.GetBalance(db)
-	if t.Sum > balance {
-		fmt.Println(balance)
-		t.Status = "rejected"
-		fmt.Println("Transaction rejected")
+	wallet.Balance = wallet.GetBalance(db)
+
+	if t.Sum > wallet.Balance {
+		t.Status = "rejected: not enough money"
+
+		fmt.Println("Transaction rejected: not enough money")
+
+	} else if t.Sum < 0 {
+		t.Status = "rejected: negative sum"
+
+		fmt.Println("Transaction rejected: negative sum")
+
 	} else {
 		t.Status = "approved"
+
 		fmt.Println("Transaction approved")
+
 	}
 
 }
@@ -118,23 +130,44 @@ func (t *TransactionTask) TransactionCheck(db *sql.DB) {
 func (t *TransactionTask) MakeTransaction(db *sql.DB) {
 
 	stringSum := fmt.Sprintf("%g", t.Sum)
+
+	if t.SenderId != "1" {
+		t.RemoveSum(db, stringSum)
+	}
+
+	if t.RecieverId != "1" && t.Status != "failed: sum removing" {
+		t.AddSum(db, stringSum)
+	}
+
+}
+
+func (t *TransactionTask) RemoveSum(db *sql.DB, stringSum string) {
+
 	_, err := db.Exec("UPDATE wallets set balance = (SELECT balance FROM wallets WHERE id = '" +
 		t.SenderId + "') - '" + stringSum + "' WHERE id = '" + t.SenderId + "';")
 
 	if err != nil {
+		t.Status = "failed: sum removing"
 		fmt.Println("Debit query fail:")
 		log.Fatal(err)
+		return
+
 	} else {
+		t.Status = "completed"
 		fmt.Println("Debit query successful")
 	}
+}
 
-	_, err = db.Exec("UPDATE wallets set balance = (SELECT balance FROM wallets WHERE id = '" +
+func (t *TransactionTask) AddSum(db *sql.DB, stringSum string) {
+
+	_, err := db.Exec("UPDATE wallets set balance = (SELECT balance FROM wallets WHERE id = '" +
 		t.RecieverId + "') + '" + stringSum + "' WHERE id = '" + t.RecieverId + "';")
 	if err != nil {
+		t.Status = "failed: sum recieving"
 		fmt.Println("Recieving funds fail:")
 		log.Fatal(err)
 	} else {
+		t.Status = "completed"
 		fmt.Println("Recieving funds is successful")
 	}
-
 }

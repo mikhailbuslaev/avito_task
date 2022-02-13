@@ -66,6 +66,7 @@ func TransactionHandler(w http.ResponseWriter, req *http.Request) {
 	if t.Status == "approved" {
 		t.MakeTransaction(database)
 	}
+	fmt.Println(t.Status)
 }
 
 func ReadHttpTransactionRequest(w http.ResponseWriter, req *http.Request) db.TransactionTask {
