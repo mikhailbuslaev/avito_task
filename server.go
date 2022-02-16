@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"time"
+	"avitotask/apikey"
 
 	"github.com/gorilla/mux"
 )
@@ -14,6 +15,22 @@ import (
 func HomeHandler(w http.ResponseWriter, req *http.Request) {
 
 	fmt.Fprintf(w, "hello\n")
+}
+
+func KeyHandler(w http.ResponseWriter, req *http.Request) {
+	t := apikey.Generate()
+	w.WriteHeader(http.StatusCreated)
+	w.Header().Set("Content-Type", "application/json")
+
+	resp := make(map[string]time.Time)
+	resp["Your key:"] = t
+
+	jsonResp, err := json.Marshal(resp)
+	if err != nil {
+		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
+	}
+
+	w.Write(jsonResp)
 }
 
 func GetBalanceHandler(w http.ResponseWriter, req *http.Request) {
@@ -92,6 +109,7 @@ func main() {
 	router.HandleFunc("/", HomeHandler).Methods("GET")
 	router.HandleFunc("/transactions", TransactionHandler).Methods("POST")
 	router.HandleFunc("/getbalance", GetBalanceHandler).Methods("POST")
+	router.HandleFunc("/getkey", KeyHandler).Methods("POST")
 
 	server := &http.Server{
 		Handler:      router,
