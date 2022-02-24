@@ -158,8 +158,13 @@ func (wallet *Wallet) GetTransactions(db *sql.DB) []TransactionTask{
 	return transactions
 }
 
-func TransactionsWrite(transactions []TransactionTask) {
+func TransactionsWrite(transactions *[]TransactionTask) string{
 
+    jsonResp, err := json.Marshal(transactions)
+    if err != nil {
+        fmt.Println(err)
+    }
+    return string(jsonResp)
 }
 
 func (t *TransactionTask) TransactionCheck(db *sql.DB) {

@@ -83,7 +83,10 @@ func GetTransactionsHandler(w http.ResponseWriter, req *http.Request) {
 	} else {
 		fmt.Println("get transactions fail: wallet id is empty")
 	}
-	fmt.Println(transactions)
+	jsonResp := db.TransactionsWrite(&transactions)
+	w.WriteHeader(http.StatusCreated)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResp)
 }
 
 func main() {
