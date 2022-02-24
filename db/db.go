@@ -33,11 +33,7 @@ type Wallet struct {
 	Balance float32
 }
 
-type Json interface {
-	Read(w http.ResponseWriter, req *http.Request)
-}
-
-func (transaction TransactionTask) Read(w http.ResponseWriter, req *http.Request) {
+func (transaction *TransactionTask) Read(w http.ResponseWriter, req *http.Request) {
 
 	err := req.ParseForm()
 
@@ -46,13 +42,13 @@ func (transaction TransactionTask) Read(w http.ResponseWriter, req *http.Request
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
-	err = json.NewDecoder(req.Body).Decode(&transaction)
+	err = json.NewDecoder(req.Body).Decode(transaction)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func (wallet Wallet) Read(w http.ResponseWriter, req *http.Request) {
+func (wallet *Wallet) Read(w http.ResponseWriter, req *http.Request) {
 
 	err := req.ParseForm()
 
@@ -61,15 +57,10 @@ func (wallet Wallet) Read(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
-	err = json.NewDecoder(req.Body).Decode(&wallet)
+	err = json.NewDecoder(req.Body).Decode(wallet)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(wallet.Id)
-}
-
-func ReadRequest(s Json, w http.ResponseWriter, req *http.Request) {
-	s.Read(w, req)
 }
 
 func Connect() *sql.DB {
@@ -152,8 +143,7 @@ func (wallet *Wallet) GetTransactions(db *sql.DB) []TransactionTask{
 	} else {
 		fmt.Println("Select query correct:")
 	}
-	fmt.Println(rows)
-	transactions := make([]TransactionTask, 10)
+	transactions := make([]TransactionTask, 0, 10)
 
 	for rows.Next() {
 		var transaction TransactionTask
@@ -163,7 +153,6 @@ func (wallet *Wallet) GetTransactions(db *sql.DB) []TransactionTask{
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println("q")
 		transactions = append(transactions, transaction)
 	}
 	return transactions

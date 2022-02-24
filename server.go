@@ -38,9 +38,9 @@ func GetBalanceHandler(w http.ResponseWriter, req *http.Request) {
 	database := db.Connect()
 
 	var wallet db.Wallet
+	var pointw *db.Wallet = &wallet
+	pointw.Read(w, req)
 
-	db.ReadRequest(wallet, w, req)
-	fmt.Println(wallet.Id)
 	wallet.Balance = wallet.GetBalance(database)
 
 	w.WriteHeader(http.StatusCreated)
@@ -60,8 +60,9 @@ func GetBalanceHandler(w http.ResponseWriter, req *http.Request) {
 func TransactionHandler(w http.ResponseWriter, req *http.Request) {
 
 	database := db.Connect()
-	transaction := db.TransactionTask{}
-	db.ReadRequest(transaction, w, req)
+	var transaction db.TransactionTask
+	var pointt *db.TransactionTask = &transaction
+	pointt.Read(w, req)
 
 	transaction.TransactionCheck(database)
 
@@ -74,12 +75,11 @@ func TransactionHandler(w http.ResponseWriter, req *http.Request) {
 func GetTransactionsHandler(w http.ResponseWriter, req *http.Request) {
 	database := db.Connect()
 	var wallet db.Wallet
-	db.ReadRequest(wallet, w, req)
-	fmt.Printf("Wallet id is %s", wallet.Id)
+	var pointw *db.Wallet = &wallet
+	pointw.Read(w, req)
 	var transactions []db.TransactionTask
-	if wallet.Id != " " {
+	if wallet.Id != "" {
 		transactions = wallet.GetTransactions(database)
-		fmt.Println("aaa")
 	} else {
 		fmt.Println("get transactions fail: wallet id is empty")
 	}
