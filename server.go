@@ -1,13 +1,13 @@
 package main
 
 import (
+	"avitotask/apikey"
 	"avitotask/db"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
-	"avitotask/apikey"
 
 	"github.com/gorilla/mux"
 )
@@ -23,7 +23,7 @@ func KeyHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	resp := make(map[string]time.Time)
-	resp["Your key:"] = t
+	resp["Your key"] = t
 
 	jsonResp, err := json.Marshal(resp)
 	if err != nil {
@@ -37,8 +37,10 @@ func GetBalanceHandler(w http.ResponseWriter, req *http.Request) {
 
 	database := db.Connect()
 
-	wallet := ReadHttpGetBalanceRequest(w, req)
+	var wallet db.Wallet
 
+	db.ReadRequest(wallet, w, req)
+	fmt.Println(wallet.Id)
 	wallet.Balance = wallet.GetBalance(database)
 
 	w.WriteHeader(http.StatusCreated)
@@ -55,52 +57,33 @@ func GetBalanceHandler(w http.ResponseWriter, req *http.Request) {
 	w.Write(jsonResp)
 }
 
-func ReadHttpGetBalanceRequest(w http.ResponseWriter, req *http.Request) db.Wallet {
-
-	var wallet db.Wallet
-	err := req.ParseForm()
-
-	if err != nil {
-		log.Fatal(err)
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-
-	err = json.NewDecoder(req.Body).Decode(&wallet)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return wallet
-}
-
 func TransactionHandler(w http.ResponseWriter, req *http.Request) {
 
 	database := db.Connect()
-	t := db.TransactionTask{}
-	t = ReadHttpTransactionRequest(w, req)
+	transaction := db.TransactionTask{}
+	db.ReadRequest(transaction, w, req)
 
-	t.TransactionCheck(database)
+	transaction.TransactionCheck(database)
 
-	if t.Status == "approved" {
-		t.MakeTransaction(database)
+	if transaction.Status == "approved" {
+		transaction.MakeTransaction(database)
 	}
-	fmt.Println(t.Status)
+	fmt.Println(transaction.Status)
 }
 
-func ReadHttpTransactionRequest(w http.ResponseWriter, req *http.Request) db.TransactionTask {
-
-	t := db.TransactionTask{}
-	err := req.ParseForm()
-
-	if err != nil {
-		log.Fatal(err)
-		w.WriteHeader(http.StatusInternalServerError)
+func GetTransactionsHandler(w http.ResponseWriter, req *http.Request) {
+	database := db.Connect()
+	var wallet db.Wallet
+	db.ReadRequest(wallet, w, req)
+	fmt.Printf("Wallet id is %s", wallet.Id)
+	var transactions []db.TransactionTask
+	if wallet.Id != " " {
+		transactions = wallet.GetTransactions(database)
+		fmt.Println("aaa")
+	} else {
+		fmt.Println("get transactions fail: wallet id is empty")
 	}
-
-	err = json.NewDecoder(req.Body).Decode(&t)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return t
+	fmt.Println(transactions)
 }
 
 func main() {
@@ -110,6 +93,7 @@ func main() {
 	router.HandleFunc("/transactions", TransactionHandler).Methods("POST")
 	router.HandleFunc("/getbalance", GetBalanceHandler).Methods("POST")
 	router.HandleFunc("/getkey", KeyHandler).Methods("POST")
+	router.HandleFunc("/gettransactions", GetTransactionsHandler).Methods("POST")
 
 	server := &http.Server{
 		Handler:      router,

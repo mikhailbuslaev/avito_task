@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 
 	_ "github.com/lib/pq"
@@ -30,6 +31,45 @@ type TransactionTask struct {
 type Wallet struct {
 	Id      string `json:"Id"`
 	Balance float32
+}
+
+type Json interface {
+	Read(w http.ResponseWriter, req *http.Request)
+}
+
+func (transaction TransactionTask) Read(w http.ResponseWriter, req *http.Request) {
+
+	err := req.ParseForm()
+
+	if err != nil {
+		log.Fatal(err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+	err = json.NewDecoder(req.Body).Decode(&transaction)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (wallet Wallet) Read(w http.ResponseWriter, req *http.Request) {
+
+	err := req.ParseForm()
+
+	if err != nil {
+		log.Fatal(err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+	err = json.NewDecoder(req.Body).Decode(&wallet)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(wallet.Id)
+}
+
+func ReadRequest(s Json, w http.ResponseWriter, req *http.Request) {
+	s.Read(w, req)
 }
 
 func Connect() *sql.DB {
@@ -98,6 +138,39 @@ func (w *Wallet) GetBalance(db *sql.DB) float32 {
 		log.Printf("Your balance is %g \n", result)
 	}
 	return result
+}
+
+func (wallet *Wallet) GetTransactions(db *sql.DB) []TransactionTask{
+
+	fmt.Println(wallet.Id)
+
+	rows, err := db.Query("SELECT SenderId, RecieverId, Sum, Status FROM transactions WHERE SenderId = '" +
+		wallet.Id + "' OR RecieverId = '" + wallet.Id + "';")
+	if err != nil {
+		fmt.Println("Select query failure:")
+		log.Fatal(err)
+	} else {
+		fmt.Println("Select query correct:")
+	}
+	fmt.Println(rows)
+	transactions := make([]TransactionTask, 10)
+
+	for rows.Next() {
+		var transaction TransactionTask
+
+		err := rows.Scan(&transaction.SenderId, &transaction.RecieverId, 
+			&transaction.Sum, &transaction.Status)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("q")
+		transactions = append(transactions, transaction)
+	}
+	return transactions
+}
+
+func TransactionsWrite(transactions []TransactionTask) {
+
 }
 
 func (t *TransactionTask) TransactionCheck(db *sql.DB) {
