@@ -1,9 +1,8 @@
 package main
 
 import (
-	"avitotask/apikey"
-	"avitotask/db"
-	"encoding/json"
+	"avito_task/app/db"
+	functions "avito_task/app/functions"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,100 +11,76 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func HomeHandler(w http.ResponseWriter, req *http.Request) {
-
-	fmt.Fprintf(w, "hello\n")
-}
-
-func KeyHandler(w http.ResponseWriter, req *http.Request) {
-	t := apikey.Generate()
-	w.WriteHeader(http.StatusCreated)
-	w.Header().Set("Content-Type", "application/json")
-
-	resp := make(map[string]time.Time)
-	resp["Your key"] = t
-
-	jsonResp, err := json.Marshal(resp)
-	if err != nil {
-		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
-	}
-
-	w.Write(jsonResp)
-}
-
-func GetBalanceHandler(w http.ResponseWriter, req *http.Request) {
-
-	database := db.Connect()
-
-	var wallet db.Wallet
-	var pointw *db.Wallet = &wallet
-	pointw.Read(w, req)
-
-	wallet.Balance = wallet.GetBalance(database)
-
-	w.WriteHeader(http.StatusCreated)
-	w.Header().Set("Content-Type", "application/json")
-
-	resp := make(map[string]float32)
-	resp["Balance"] = wallet.Balance
-
-	jsonResp, err := json.Marshal(resp)
-	if err != nil {
-		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
-	}
-
-	w.Write(jsonResp)
-}
-
-func TransactionHandler(w http.ResponseWriter, req *http.Request) {
-
-	database := db.Connect()
-	var transaction db.TransactionTask
-	var pointt *db.TransactionTask = &transaction
-	pointt.Read(w, req)
-
-	transaction.TransactionCheck(database)
-
-	if transaction.Status == "approved" {
-		transaction.MakeTransaction(database)
-	}
-	fmt.Println(transaction.Status)
-}
-
-func GetTransactionsHandler(w http.ResponseWriter, req *http.Request) {
-	database := db.Connect()
-	var wallet db.Wallet
-	var pointw *db.Wallet = &wallet
-	pointw.Read(w, req)
-	var transactions []db.TransactionTask
-	if wallet.Id != "" {
-		transactions = wallet.GetTransactions(database)
-	} else {
-		fmt.Println("get transactions fail: wallet id is empty")
-	}
-	jsonResp := db.TransactionsWrite(&transactions)
-	w.WriteHeader(http.StatusCreated)
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonResp)
-}
-
 func main() {
+	r := mux.NewRouter()
+	r.HandleFunc("/getbalance", GetBalanceHandler)
+	r.HandleFunc("/maketransaction", MakeTransactionHandler)
+	r.HandleFunc("/gettransactions", GetTransactionsHandler)
 
-	router := mux.NewRouter()
-	router.HandleFunc("/", HomeHandler).Methods("GET")
-	router.HandleFunc("/transactions", TransactionHandler).Methods("POST")
-	router.HandleFunc("/getbalance", GetBalanceHandler).Methods("POST")
-	router.HandleFunc("/getkey", KeyHandler).Methods("POST")
-	router.HandleFunc("/gettransactions", GetTransactionsHandler).Methods("POST")
+	s := &http.Server{
+		Addr:           ":1111",
+		Handler:        r,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	}
+	log.Fatal(s.ListenAndServe())
+}
 
-	server := &http.Server{
-		Handler:      router,
-		Addr:         "127.0.0.1:1488",
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
+func GetTransactionsHandler(w http.ResponseWriter, r *http.Request) {
+	database := db.Connect()
+
+	transactions := &functions.Transactions{}
+
+	user := &functions.User{}
+
+	functions.Read(user, w, r)
+
+	functions.ScanRows(transactions, db.GetTransactions(database, user.Id, 10))
+
+	functions.Write(transactions, w, r)
+}
+
+func MakeTransactionHandler(w http.ResponseWriter, r *http.Request) {
+	database := db.Connect()
+
+	transaction := &functions.Transaction{}
+
+	functions.Read(transaction, w, r)
+
+	transaction.Status = transaction.Status+"/pending"
+
+	sender := &functions.User{Id: transaction.Sender}
+
+	functions.ScanRows(sender, db.Select(database,  "SELECT id, balance FROM "+
+	"wallets where id='"+sender.Id+"';"))
+
+	if sender.Balance < transaction.Sum {
+		fmt.Println("Transaction failed, sender haven`t enough amount of money")
+		transaction.Status = transaction.Status+"/canceled, sender haven`t enough amount of money"
+	} else {
+		transaction.Status = transaction.Status+
+		db.AddSum(database, transaction.Receiver, transaction.Sum)
+		
+		transaction.Status = transaction.Status+
+		db.RemoveSum(database, transaction.Sender, transaction.Sum)
 	}
 
-	fmt.Println("Server run...")
+	db.RecordTransaction(database, transaction.Sender, transaction.Receiver, transaction.Sum, 
+	transaction.Status)
+	
+	functions.Write(transaction, w, r)
+}
 
-	log.Fatal(server.ListenAndServe())
+func GetBalanceHandler(w http.ResponseWriter, r *http.Request) {
+	database := db.Connect()
+
+	user := &functions.User{}
+
+	functions.Read(user, w, r)
+
+	functions.ScanRows(user, db.Select(database, "SELECT id, balance FROM "+
+	"wallets where id='"+user.Id+"';"))
+
+	functions.Write(user, w, r)
 }

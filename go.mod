@@ -1,4 +1,4 @@
-module avitotask
+module avito_task
 
 go 1.17
 
