@@ -17,15 +17,15 @@ type Transactions struct {
 }
 
 type JsonData interface {
-	ParseJson(w http.ResponseWriter, req *http.Request)
-	WriteJson(w http.ResponseWriter, req *http.Request)
+	Parse(req *http.Request) error
+	Write() ([]byte, error)
 }
 
 type Rows interface {
-	Scan(rows *sql.Rows)
+	Scan(rows *sql.Rows) error
 }
 
-func (user *User) ParseJson(w http.ResponseWriter, req *http.Request) {
+func (user *User) Parse(req *http.Request) error {
 	err := req.ParseForm()
 
 	if err != nil {
@@ -35,11 +35,12 @@ func (user *User) ParseJson(w http.ResponseWriter, req *http.Request) {
 	err = json.NewDecoder(req.Body).Decode(user)
 
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
+	return err
 }
 
-func (transaction *Transaction) ParseJson(w http.ResponseWriter, req *http.Request) {
+func (transaction *Transaction) Parse(req *http.Request) error {
 	err := req.ParseForm()
 
 	if err != nil {
@@ -49,59 +50,56 @@ func (transaction *Transaction) ParseJson(w http.ResponseWriter, req *http.Reque
 	err = json.NewDecoder(req.Body).Decode(transaction)
 
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
+	return err
 }
 
-func (transactions *Transactions) ParseJson(w http.ResponseWriter, req *http.Request) {
-
+func (transactions *Transactions) Parse(req *http.Request) error {
+	var err error = nil
+	return err
 }
 
-func Read(data JsonData, w http.ResponseWriter, req *http.Request) {
-	data.ParseJson(w, req)
+func ParseJson(data JsonData, req *http.Request) error {
+	return data.Parse(req)
 }
 
-func (user *User) WriteJson(w http.ResponseWriter, req *http.Request) {
+func (user *User) Write() ([]byte, error) {
 
 	jsonResult, err := json.Marshal(user)
 	if err != nil {
 		fmt.Println(err)
 	}
-	w.WriteHeader(http.StatusCreated)
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonResult) 
+	return jsonResult, err
 }
 
-func (transaction *Transaction) WriteJson(w http.ResponseWriter, req *http.Request) {
+func (transaction *Transaction) Write() ([]byte, error) {
 
 	jsonResult, err := json.Marshal(transaction)
 	if err != nil {
 		fmt.Println(err)
 	}
-	w.WriteHeader(http.StatusCreated)
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonResult)
+	return jsonResult, err
 }
 
-func (transactions Transactions) WriteJson(w http.ResponseWriter, req *http.Request) {
+func (transactions Transactions) Write() ([]byte, error) {
 
 	jsonResult, err := json.Marshal(transactions.Slice)
 	if err != nil {
 		fmt.Println(err)
 	}
-	w.WriteHeader(http.StatusCreated)
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonResult) 
+	return jsonResult, err
 }
 
-func Write(data JsonData, w http.ResponseWriter, req *http.Request) {
-	data.WriteJson(w, req)
+func WriteJson(data JsonData) ([]byte, error) {
+	return data.Write()
 }
 
-func (user *User) Scan(rows *sql.Rows) {
+func (user *User) Scan(rows *sql.Rows) error {
+	var err error = nil
+
 	for rows.Next() {
-
-		err := rows.Scan(&user.Id, &user.Balance)
+		err = rows.Scan(&user.Id, &user.Balance)
 
 		if err != nil {
 			fmt.Println("Result Scan fail:")
@@ -110,12 +108,14 @@ func (user *User) Scan(rows *sql.Rows) {
 			fmt.Println("Result Scan successful")
 		}
 	}
+	return err
 }
 
-func (transaction *Transaction) Scan(rows *sql.Rows) {
-	for rows.Next() {
+func (transaction *Transaction) Scan(rows *sql.Rows) error {
+	var err error = nil
 
-		err := rows.Scan(&transaction.Sender, &transaction.Receiver,
+	for rows.Next() {
+		err = rows.Scan(&transaction.Sender, &transaction.Receiver,
 			&transaction.Sum, &transaction.Status)
 
 		if err != nil {
@@ -125,13 +125,15 @@ func (transaction *Transaction) Scan(rows *sql.Rows) {
 			fmt.Println("Result Scan successful")
 		}
 	}
+	return err
 }
 
-func (transactions *Transactions) Scan(rows *sql.Rows) {
-	for rows.Next() {
+func (transactions *Transactions) Scan(rows *sql.Rows) error {
+	var err error = nil
 
+	for rows.Next() {
 		transaction := Transaction{}
-		err := rows.Scan(&transaction.Sender, &transaction.Receiver,
+		err = rows.Scan(&transaction.Sender, &transaction.Receiver,
 			&transaction.Sum, &transaction.Status)
 
 		if err != nil {
@@ -142,9 +144,9 @@ func (transactions *Transactions) Scan(rows *sql.Rows) {
 			transactions.Slice = append(transactions.Slice, transaction)
 		}
 	}
+	return err
 }
 
-func ScanRows(r Rows, rows *sql.Rows) {
-	r.Scan(rows)
+func ScanRows(r Rows, rows *sql.Rows) error {
+	return r.Scan(rows)
 }
-
