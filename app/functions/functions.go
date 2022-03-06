@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 )
 
@@ -29,7 +28,7 @@ func (user *User) Parse(req *http.Request) error {
 	err := req.ParseForm()
 
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 
 	err = json.NewDecoder(req.Body).Decode(user)
@@ -44,7 +43,7 @@ func (transaction *Transaction) Parse(req *http.Request) error {
 	err := req.ParseForm()
 
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 
 	err = json.NewDecoder(req.Body).Decode(transaction)
@@ -56,7 +55,17 @@ func (transaction *Transaction) Parse(req *http.Request) error {
 }
 
 func (transactions *Transactions) Parse(req *http.Request) error {
-	var err error = nil
+	err := req.ParseForm()
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	err = json.NewDecoder(req.Body).Decode(transactions)
+
+	if err != nil {
+		fmt.Println(err)
+	}
 	return err
 }
 
@@ -102,8 +111,7 @@ func (user *User) Scan(rows *sql.Rows) error {
 		err = rows.Scan(&user.Id, &user.Balance)
 
 		if err != nil {
-			fmt.Println("Result Scan fail:")
-			log.Fatal(err)
+			fmt.Println("Result Scan fail")
 		} else {
 			fmt.Println("Result Scan successful")
 		}
@@ -119,8 +127,7 @@ func (transaction *Transaction) Scan(rows *sql.Rows) error {
 			&transaction.Sum, &transaction.Status)
 
 		if err != nil {
-			fmt.Println("Result Scan fail:")
-			log.Fatal(err)
+			fmt.Println("Result Scan fail")
 		} else {
 			fmt.Println("Result Scan successful")
 		}
@@ -137,8 +144,7 @@ func (transactions *Transactions) Scan(rows *sql.Rows) error {
 			&transaction.Sum, &transaction.Status)
 
 		if err != nil {
-			fmt.Println("Result Scan fail:")
-			log.Fatal(err)
+			fmt.Println("Result Scan fail")
 		} else {
 			fmt.Println("Result Scan successful")
 			transactions.Slice = append(transactions.Slice, transaction)

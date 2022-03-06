@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 
 	_ "github.com/lib/pq"
@@ -31,7 +30,7 @@ func Connect() (*sql.DB, error) {
 
 	byteValue, err := ioutil.ReadAll(file)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 
 	var config Config
