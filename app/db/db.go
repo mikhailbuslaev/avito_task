@@ -66,7 +66,7 @@ func Change(db *sql.DB, request string) (string, error) {
 }
 
 func Select(db *sql.DB, request string) (*sql.Rows, error) {
-	result, err := db.Query(request)
+	result, err := db.Query(request) 
 
 	if err != nil {
 		fmt.Println("Select query failure")

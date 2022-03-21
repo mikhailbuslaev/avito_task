@@ -122,7 +122,7 @@ func (user *User) Scan(rows *sql.Rows) error {
 func (transaction *Transaction) Scan(rows *sql.Rows) error {
 	var err error = nil
 
-	for rows.Next() {
+	for rows.Next() { 
 		err = rows.Scan(&transaction.Sender, &transaction.Receiver,
 			&transaction.Sum, &transaction.Status)
 
@@ -155,4 +155,14 @@ func (transactions *Transactions) Scan(rows *sql.Rows) error {
 
 func ScanRows(r Rows, rows *sql.Rows) error {
 	return r.Scan(rows)
+}
+
+func Validate(w http.ResponseWriter, req *http.Request) bool{
+	var valid bool
+	if req.Header["Key"][0] != "1111" {
+		valid = false
+	} else {
+		valid = true
+	}
+	return valid
 }
