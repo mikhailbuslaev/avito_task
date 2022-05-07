@@ -43,7 +43,7 @@ func GetTransactionsHandler(w http.ResponseWriter, r *http.Request) {
 	
 		user := &functions.User{}
 	
-		readError := functions.ParseJson(user, r) //parsing json body of request
+		readError := functions.ParseReq(user, r) //parsing json body of request
 		if readError != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("400: server can`t parse your request"))
@@ -89,7 +89,7 @@ func MakeTransactionHandler(w http.ResponseWriter, r *http.Request) {
 	
 		transaction := &functions.Transaction{}
 	
-		readError := functions.ParseJson(transaction, r) //parsing json body request
+		readError := functions.ParseReq(transaction, r) //parsing json body request
 		if readError != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("400: server can`t parse your json"))
@@ -169,7 +169,7 @@ func GetBalanceHandler(w http.ResponseWriter, r *http.Request) {
 
 	user := &functions.User{}
 
-	readError := functions.ParseJson(user, r)//parse request to user struct
+	readError := functions.ParseReq(user, r)//parse request to user struct
 	if readError != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("400: server can`t parse your request"))
@@ -216,7 +216,7 @@ func ChangeBalanceHandler(w http.ResponseWriter, r *http.Request) {
 	
 		transaction := &functions.Transaction{}
 	
-		readError := functions.ParseJson(transaction, r)//parse json to transaction struct
+		readError := functions.ParseReq(transaction, r)//parse json to transaction struct
 		if readError != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("400: server can`t parse your json"))

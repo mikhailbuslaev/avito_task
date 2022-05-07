@@ -1,37 +1,42 @@
 package functions
 
 import (
-	"avito_task/app/model"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
 )
 
-type User model.User
-type Transaction model.Transaction
+type User struct {
+	Id      string  `json:"Id"`
+	Balance float32 `json:"Balance"`
+}
+
+type Transaction struct {
+	Sender   string  `json:"Sender"`
+	Receiver string  `json:"Receiver"`
+	Sum      float32 `json:"Sum"`
+	Status   string  `json:"Status"`
+}
 
 type Transactions struct {
-	Slice []Transaction
+	Slice []Transaction `json:"Transactions"`
 }
 
-type JsonData interface {
-	Parse(req *http.Request) error
-	Write() ([]byte, error)
-}
+type JsonData interface {}
 
 type Rows interface {
 	Scan(rows *sql.Rows) error
 }
 
-func (user *User) Parse(req *http.Request) error {
+func ParseReq(j JsonData, req *http.Request) error {
 	err := req.ParseForm()
 
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	err = json.NewDecoder(req.Body).Decode(user)
+	err = json.NewDecoder(req.Body).Decode(j)
 
 	if err != nil {
 		fmt.Println(err)
@@ -39,69 +44,13 @@ func (user *User) Parse(req *http.Request) error {
 	return err
 }
 
-func (transaction *Transaction) Parse(req *http.Request) error {
-	err := req.ParseForm()
+func WriteJson(j JsonData) ([]byte, error) {
 
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	err = json.NewDecoder(req.Body).Decode(transaction)
-
-	if err != nil {
-		fmt.Println(err)
-	}
-	return err
-}
-
-func (transactions *Transactions) Parse(req *http.Request) error {
-	err := req.ParseForm()
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	err = json.NewDecoder(req.Body).Decode(transactions)
-
-	if err != nil {
-		fmt.Println(err)
-	}
-	return err
-}
-
-func ParseJson(data JsonData, req *http.Request) error {
-	return data.Parse(req)
-}
-
-func (user *User) Write() ([]byte, error) {
-
-	jsonResult, err := json.Marshal(user)
+	jsonResult, err := json.Marshal(j)
 	if err != nil {
 		fmt.Println(err)
 	}
 	return jsonResult, err
-}
-
-func (transaction *Transaction) Write() ([]byte, error) {
-
-	jsonResult, err := json.Marshal(transaction)
-	if err != nil {
-		fmt.Println(err)
-	}
-	return jsonResult, err
-}
-
-func (transactions Transactions) Write() ([]byte, error) {
-
-	jsonResult, err := json.Marshal(transactions.Slice)
-	if err != nil {
-		fmt.Println(err)
-	}
-	return jsonResult, err
-}
-
-func WriteJson(data JsonData) ([]byte, error) {
-	return data.Write()
 }
 
 func (user *User) Scan(rows *sql.Rows) error {
